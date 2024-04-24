@@ -421,6 +421,29 @@ SmartHome.prototype.setNewRoomName = function(oldName, newName) {
     return true;
 }
 
+SmartHome.prototype.__deleteRoom = function (room) {
+    for (var i = 0; i < this.__rooms.length; i++) {
+        if (this.__rooms[i].getName() === room.getName()) {
+            this.__rooms.splice(i, 1);
+            break;
+        }
+    }
+}
+
+SmartHome.prototype.__displayDeletePrompt = function (room, home, deleteCallback) {
+    var result = prompt('Are you sure that you want to delete ' + room.getName() + ' from ' + home.getName() + '? (yes | no)');
+    if (result !== null && typeof result === 'string' && result.trim().length > 0) {
+        if (result.trim().toLowerCase() === 'yes') {
+            console.log('Room ' + room.getName() + ' was deleted successfully.');
+            deleteCallback(room, home);
+        } else if (result.trim().toLowerCase() === 'no') {
+            console.log('Cancel operation.');
+        } else {
+            room.__displayDeletePrompt(room, home, deleteCallback);
+        }
+    }
+}
+
 SmartHome.prototype.deleteRoom = function (roomName) {
     // checking if any rooms exist
     if (this.__rooms.length == 0) {
@@ -433,9 +456,9 @@ SmartHome.prototype.deleteRoom = function (roomName) {
         return false;
     }
     var room = this.getRoomByName(roomName);
-    var index = this.__rooms.indexOf(room);
-    this.__rooms.splice(index, 1);
-    console.log('Room ' + roomName + ' deleted successfully.');
+    this.__displayDeletePrompt(room, this, function (room, home) {
+        home.__deleteRoom(room);
+    });
     return true;
 }
 
@@ -540,6 +563,7 @@ SmartHome.prototype.getInfo = function () {
 var sh = new SmartHome("My Smart Home");
 var room1 = new Room('living room');
 var room2 = new Room('Bedroom');
+var room3 = new Room('Bathroom');
 room1.addDevice(new Lamp("Lamp1"));
 room1.addDevice(new Lamp("Lamp2"));
 sh.getRoomByName("living room");
@@ -547,19 +571,20 @@ sh.addRoom(room1);
 sh.addRoom(room1);
 sh.addRoom('jhi');
 sh.addRoom(room2);
+sh.addRoom(room3);
+sh.deleteRoom('Bathroom');
 sh.setNewRoomName(room2.getName(), 'bedroom');
 console.log(sh.getInfo());
 sh.getDeviceByName('Lamp1');
 sh.getDeviceByName('Lamp2');
-sh.setNewDeviceName(lamp2.getName(), 12);
-sh.setNewDeviceName(lamp2.getName(), 'Lamp');
+sh.setNewDeviceName('Lamp2', 12);
+sh.setNewDeviceName('Lamp2', 'Lamp');
 sh.addNewDevice("living room", new TV("tv1"));
 sh.addNewDevice("bedroom", new AirConditioner("AC1"));
 sh.addNewDevice("bedroom", new AirConditioner("AC1"));
 var lamp = new Lamp("Lamp 2");
 sh.addNewDevice("bedroom", new Lamp("Lamp 2"));
 
-sh.deleteDevice("bedroom", lamp);
 sh.deleteDevice("bedroom", lamp);
 
 console.log(sh.getDevices()) // Lamp1 Lamp2
